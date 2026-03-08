@@ -1,5 +1,5 @@
-// ABI parameters are passed by rgisters: a, b and c
-// free registers are: d
+// ABI(a, b and c)
+// scratch is d
 
 goto bond downto: state locus
 
