@@ -14,13 +14,9 @@ fetch(`
 
   point register a bond file: walk.step
   point register b bond file: tape.step
-
   goto register b
   halt the end!
   `.split('\n').map((iline) => iline.split(" ").map(λ => λ.trim()).filter(Boolean)),
   { a: 0, b: 0, c: 0, d: 0 },
-  os(decode, execute, number, register, words)
-);
-
-
+  os(decode, execute, number, register, words));
 

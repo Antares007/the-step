@@ -4,12 +4,12 @@
 move    register a register b
 output  register a
 add     register a number 1
-point   register b bond downto: goto head
+point   register b bond below: goto head
 goto    register c
 
 # goto head
 move  register d register a
-point register a bond upto: head
+point register a bond higher: head
 goto  register d
 
 
