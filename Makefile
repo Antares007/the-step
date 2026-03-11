@@ -2,12 +2,13 @@ SOURCES = $(wildcard *.c *.s)
 OBJECTS = $(addsuffix .o,$(basename $(SOURCES)))
 CC      = gcc
 CFLAGS += -m32 -fno-pic -fno-pie \
-          -nostdlib -nostdinc -fno-builtin -fno-stack-protector \
+          -nostdlib \
+					-fno-builtin -fno-stack-protector \
           -nostartfiles -nodefaultlibs \
           -ffreestanding \
           -fno-omit-frame-pointer \
           -O2 \
-          -Wall -Wextra -c
+          -Wall -Wextra -c 
 LDFLAGS = -T link.ld -melf_i386
 AS      = nasm
 ASFLAGS = -f elf32
@@ -30,7 +31,7 @@ myosin.iso: kernel.elf
 	grub-mkrescue -o myosin.iso iso 2>/dev/null
 
 run: myosin.iso
-	qemu-system-x86_64 -cdrom myosin.iso
+	qemu-system-x86_64 -cdrom myosin.iso -serial stdio
 
 %.o: %.c
 	$(CC) $(CFLAGS) $< -o $@

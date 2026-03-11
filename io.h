@@ -1,4 +1,12 @@
 #pragma once
+/** inb:
+ *  Read a byte from an I/O port.
+ *
+ *  @param  port The address of the I/O port
+ *  @return      The read byte
+ */
+unsigned char inb(unsigned short port);
+
 /** outb:
  *  Sends the given data to the given I/O port. Defined in io.s
  *
