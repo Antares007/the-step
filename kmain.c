@@ -49,7 +49,16 @@ void myosin_log(const char *fmt, ...) {
   va_end(ap);
   serial_write(SERIAL_COM1, buf);
 }
-
+extern char text_start;
+extern char text_end;
+extern char rodata_start;
+extern char rodata_end;
+extern char data_start;
+extern char data_end;
+extern char bss_start;
+extern char bss_end;
+extern char kernel_end;
+char a[2048];
 int sum_of_three(int arg1, int arg2, int arg3) {
   serial_init(SERIAL_COM1);
   fb_write_cell(0, 'a', 15, 0);
@@ -58,7 +67,16 @@ int sum_of_three(int arg1, int arg2, int arg3) {
   fb_write_cell(6, 'o', 15, 0);
   fb_write_cell(160 * 12 + 80, 'x', 4, 15);
 
-  myosin_log("%d, %d, %d\n", 1, 2, 3);
+//  myosin_log("%d, %d, %d\n", 1, 2, 3);
+
+#define MAP(n, s, e) \
+    myosin_log("[%x-%x] "#n" %db\n", &s, &e, &e - &s);
+  MAP(text, text_start, text_end)
+  MAP(rodata, rodata_start, rodata_end)
+  MAP(data, data_start, data_end)
+  MAP(bss, bss_start, bss_end)
+  MAP(kernel, text_start, kernel_end)
+#undef MAP
 
   return arg1 + arg2 + arg3;
 }
