@@ -6,7 +6,6 @@
 /* The I/O port commands */
 #define FB_HIGH_BYTE_COMMAND 14
 #define FB_LOW_BYTE_COMMAND 15
-
 /** fb_move_cursor:
  *  Moves the cursor of the framebuffer to the given position
  *
@@ -34,13 +33,10 @@ void fb_write_cell(unsigned int i, char c, unsigned char fg, unsigned char bg) {
   fb[i + 1] = ((fg & 0x0F) << 4) | (bg & 0x0F);
   fb_move_cursor(i / 2);
 }
-
 #include "serial.h"
 #include "stdarg.h"
-
 int ksnprintf(char *buf, unsigned int size, const char *fmt, ...);
 int kvsnprintf(char *buf, unsigned int size, const char *fmt, va_list ap);
-
 void myosin_log(const char *fmt, ...) {
   static char buf[2048];
   va_list ap;
@@ -49,34 +45,15 @@ void myosin_log(const char *fmt, ...) {
   va_end(ap);
   serial_write(SERIAL_COM1, buf);
 }
-extern char text_start;
-extern char text_end;
-extern char rodata_start;
-extern char rodata_end;
-extern char data_start;
-extern char data_end;
-extern char bss_start;
-extern char bss_end;
-extern char kernel_end;
-char a[2048];
-int sum_of_three(int arg1, int arg2, int arg3) {
+extern char myosin_free;
+void myosin() {
   serial_init(SERIAL_COM1);
-  fb_write_cell(0, 'a', 15, 0);
-  fb_write_cell(2, 'c', 15, 0);
-  fb_write_cell(4, 'h', 15, 0);
-  fb_write_cell(6, 'o', 15, 0);
+  fb_write_cell(0, 'm', 15, 0);
+  fb_write_cell(2, 'y', 15, 0);
+  fb_write_cell(4, 'o', 15, 0);
+  fb_write_cell(6, 's', 15, 0);
+  fb_write_cell(8, 'i', 15, 0);
+  fb_write_cell(10, 'n', 15, 0);
   fb_write_cell(160 * 12 + 80, 'x', 4, 15);
-
-//  myosin_log("%d, %d, %d\n", 1, 2, 3);
-
-#define MAP(n, s, e) \
-    myosin_log("[%x-%x] "#n" %db\n", &s, &e, &e - &s);
-  MAP(text, text_start, text_end)
-  MAP(rodata, rodata_start, rodata_end)
-  MAP(data, data_start, data_end)
-  MAP(bss, bss_start, bss_end)
-  MAP(kernel, text_start, kernel_end)
-#undef MAP
-
-  return arg1 + arg2 + arg3;
 }
+

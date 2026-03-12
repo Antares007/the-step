@@ -31,7 +31,7 @@ myosin.iso: kernel.elf
 	grub-mkrescue -o myosin.iso iso 2>/dev/null
 
 run: myosin.iso
-	qemu-system-x86_64 -cdrom myosin.iso -serial stdio
+	qemu-system-i386 -cdrom myosin.iso -serial stdio
 
 %.o: %.c
 	$(CC) $(CFLAGS) $< -o $@

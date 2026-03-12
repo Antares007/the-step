@@ -6,7 +6,7 @@
     CHECKSUM     equ -MAGIC_NUMBER  ; calculate the checksum
                                     ; (magic number + checksum + flags should equal 0)
 
-    KERNEL_STACK_SIZE equ 4096      ; size of stack in bytes
+    KERNEL_STACK_SIZE equ 0x10000   ; size of stack in bytes
 
     section .bss
     align 4                         ; align at 4 bytes
@@ -21,11 +21,37 @@
 
     align 4                         ; the code must be 4 byte aligned
     loader:                         ; the loader label (defined as entry point in linker script)
+        cli
         mov esp, kernel_stack + KERNEL_STACK_SIZE
-        extern sum_of_three     ; the function sum_of_three is defined elsewhere
-        push dword 3            ; arg3
-        push dword 2            ; arg2
-        push dword 1            ; arg1
-        call sum_of_three       ; call the function, the result will be in eax
+
+        lgdt [gdtr]
+        jmp 0x08:.flush
+        .flush:
+        mov ax, 0x10
+        mov ds, ax
+        mov es, ax
+        mov fs, ax
+        mov gs, ax
+        mov ss, ax
+
+        extern idt_load
+        call idt_load
+
+        extern myosin
+        call myosin
     .loop:
-        jmp .loop                   ; loop forever
+        hlt
+        jmp .loop
+
+section .data
+align 4
+gdt:
+dq 0x0000000000000000        ; null descriptor
+dq 0x00CF9A000000FFFF        ; kernel code
+dq 0x00CF92000000FFFF        ; kernel data
+gdt_end:
+
+align 4
+gdtr:
+dw gdt_end - gdt - 1
+dd gdt
