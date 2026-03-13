@@ -1,3 +1,4 @@
+#include "io.h"
 #include <stdint.h>
 struct __attribute__((packed)) pusha_regs {
   uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -14,6 +15,11 @@ typedef struct __attribute__((packed)) interrupt_ctx_err {
   uint32_t error_code;
   struct cpu_frame frame;
 } interrupt_ctx_err;
+
+static inline void pic_eoi(unsigned char irq) {
+    if (irq >= 8) outb(0xA0, 0x20);
+    outb(0x20, 0x20);
+}
 
 void myosin_log(const char *fmt, ...);
 #define P myosin_log("%s 0x%x\n", __func__, ctx)
@@ -55,22 +61,26 @@ void int28_reserved28(interrupt_ctx *ctx) { P; }
 void int29_reserved29(interrupt_ctx *ctx) { P; }
 void int30_reserved30(interrupt_ctx *ctx) { P; }
 void int31_reserved31(interrupt_ctx *ctx) { P; }
-void int32_irq0_timer(interrupt_ctx *ctx) { P; }
-void int33_irq1_keyboard(interrupt_ctx *ctx) { P; }
-void int34_irq2(interrupt_ctx *ctx) { P; }
-void int35_irq3(interrupt_ctx *ctx) { P; }
-void int36_irq4(interrupt_ctx *ctx) { P; }
-void int37_irq5(interrupt_ctx *ctx) { P; }
-void int38_irq6(interrupt_ctx *ctx) { P; }
-void int39_irq7(interrupt_ctx *ctx) { P; }
-void int40_irq8(interrupt_ctx *ctx) { P; }
-void int41_irq9(interrupt_ctx *ctx) { P; }
-void int42_irq10(interrupt_ctx *ctx) { P; }
-void int43_irq11(interrupt_ctx *ctx) { P; }
-void int44_irq12_mouse(interrupt_ctx *ctx) { P; }
-void int45_irq13(interrupt_ctx *ctx) { P; }
-void int46_irq14_ata_primary(interrupt_ctx *ctx) { P; }
-void int47_irq15_ata_secondary(interrupt_ctx *ctx) { P; }
+void int32_irq0_timer(interrupt_ctx *ctx) { (void)ctx, pic_eoi(0); }
+void int33_irq1_keyboard(interrupt_ctx *ctx) { P;
+    unsigned char sc = inb(0x60);
+    myosin_log("key: 0x%x\n", sc);
+    pic_eoi(1);
+}
+void int34_irq2(interrupt_ctx *ctx) { P;pic_eoi(2); }
+void int35_irq3(interrupt_ctx *ctx) { P;pic_eoi(3); }
+void int36_irq4(interrupt_ctx *ctx) { P;pic_eoi(4); }
+void int37_irq5(interrupt_ctx *ctx) { P;pic_eoi(5); }
+void int38_irq6(interrupt_ctx *ctx) { P;pic_eoi(6); }
+void int39_irq7(interrupt_ctx *ctx) { P;pic_eoi(7); }
+void int40_irq8(interrupt_ctx *ctx) { P;pic_eoi(8); }
+void int41_irq9(interrupt_ctx *ctx) { P;pic_eoi(9); }
+void int42_irq10(interrupt_ctx *ctx) { P;pic_eoi(10); }
+void int43_irq11(interrupt_ctx *ctx) { P;pic_eoi(11); }
+void int44_irq12_mouse(interrupt_ctx *ctx) { P;pic_eoi(12); }
+void int45_irq13(interrupt_ctx *ctx) { P;pic_eoi(13); }
+void int46_irq14_ata_primary(interrupt_ctx *ctx) { P;pic_eoi(14); }
+void int47_irq15_ata_secondary(interrupt_ctx *ctx) { P;pic_eoi(15); }
 void int_not_implemented(interrupt_ctx *ctx) { P;
   myosin_log("eax: 0x%x\n", ctx->regs.eax);
   myosin_log("ebp: 0x%x\n", ctx->regs.ebp);

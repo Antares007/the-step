@@ -46,6 +46,13 @@ void myosin_log(const char *fmt, ...) {
   serial_write(SERIAL_COM1, buf);
 }
 extern char myosin_free;
+static void pic_remap(void) {
+    outb(0x20, 0x11); outb(0xA0, 0x11);  // ICW1
+    outb(0x21, 0x20); outb(0xA1, 0x28);  // ICW2: remap master→32, slave→40
+    outb(0x21, 0x04); outb(0xA1, 0x02);  // ICW3: cascade
+    outb(0x21, 0x01); outb(0xA1, 0x01);  // ICW4: 8086 mode
+    outb(0x21, 0xFC); outb(0xA1, 0xFF);  // mask all except IRQ0+IRQ1
+}
 void myosin() {
   serial_init(SERIAL_COM1);
   fb_write_cell(0, 'm', 15, 0);
@@ -55,5 +62,17 @@ void myosin() {
   fb_write_cell(8, 'i', 15, 0);
   fb_write_cell(10, 'n', 15, 0);
   fb_write_cell(160 * 12 + 80, 'x', 4, 15);
+
+  pic_remap();
+  asm volatile("sti");
+  myosin_log("here comes div/0\n");
+  volatile int q = 0;
+  int r = 1 / q;
+  r = 2 / q;
+  myosin_log("r = %d\n", r);
+  r = 3 / q;
+  myosin_log("r = %d\n", r);
+  r = 4 / q;
+  myosin_log("r = %d\n", r);
 }
 

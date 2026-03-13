@@ -1,26 +1,15 @@
 ENTRY(loader)
 SECTIONS {
   . = 0x00100000;
-  .text ALIGN(0x1000) : {
-    beginning.o(.text)
-    idt.o(.text)
-    idt_gates.o(.text)
-    *(.text)
-  }
-  .rodata ALIGN(0x1000) : {
-    *(.rodata*)
-  }
-  .data ALIGN(0x1000) : {
-    *(.data)
-  }
-  .bss ALIGN(0x1000) : {
-    *(COMMON)
-    *(.bss)
+  .ring0 ALIGN(0x1000) : {
+    beginning.o (.text, .rodata*, .data, COMMON, .bss)
+    idt.o       (.text, .rodata*, .data, COMMON, .bss)
+    idt_load.o  (.text, .rodata*, .data, COMMON, .bss)
+    ksnprintf.o (.text, .rodata*, .data, COMMON, .bss)
+    myosin.o    (.text, .rodata*, .data, COMMON, .bss)
+    serial.o    (.text, .rodata*, .data, COMMON, .bss)
+    idt_gates.o (.text, .rodata*, .data, COMMON, .bss)
   }
   myosin_free = .;
 
-  /DISCARD/ : {
-    *(.eh_frame)
-    *(.comment)
-  }
 }

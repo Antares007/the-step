@@ -8,6 +8,9 @@ CFLAGS += -m32 -fno-pic -fno-pie \
           -ffreestanding \
           -fno-omit-frame-pointer \
           -O2 \
+          -fno-asynchronous-unwind-tables \
+          -fno-ident \
+          -Wa,--noexecstack \
           -Wall -Wextra -c 
 LDFLAGS = -T link.ld -melf_i386
 AS      = nasm
