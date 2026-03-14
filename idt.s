@@ -14,20 +14,22 @@ section .text
 align 4
 iret_error:
   add esp, 4
+  popa
+  add esp, 4
   iret
 
 align 4
 iret_interrupt:
+  add esp, 4
+  popa
   iret
 
 %macro hand 3
   extern int%3_%2
   pusha
   push esp
-  call int%3_%2
-  add esp, 4
-  popa
-  jmp iret_%1
+  push iret_%1
+  jmp int%3_%2
   align 4
 %endmacro
 
