@@ -11,7 +11,7 @@ CFLAGS += -m32 -fno-pic -fno-pie \
           -fno-asynchronous-unwind-tables \
           -fno-ident \
           -Wa,--noexecstack \
-          -Wall -Wextra -c 
+          -Wall -Wextra -Wno-unused-parameter -c 
 LDFLAGS = -T link.ld -melf_i386
 AS      = nasm
 ASFLAGS = -f elf32
