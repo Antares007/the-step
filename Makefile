@@ -1,5 +1,3 @@
-SOURCES = $(wildcard *.c *.s)
-OBJECTS = $(addsuffix .o,$(basename $(SOURCES)))
 CC      = gcc
 CFLAGS += -m32 -fno-pic -fno-pie \
           -nostdlib \
@@ -16,25 +14,22 @@ LDFLAGS = -T link.ld -melf_i386
 AS      = nasm
 ASFLAGS = -f elf32
 
-all: kernel.elf
+all: mb
 
-kernel.elf: $(OBJECTS)
-	echo $(OBJECTS)
-	ld $(LDFLAGS) $(OBJECTS) -o kernel.elf
-
-myosin.iso: kernel.elf
+mb.elf: mb.o mb.ld
+	ld -m elf_i386 -T mb.ld mb.o -o mb.elf -o mb.elf
+mb.iso: mb.elf
 	mkdir -p iso/boot/grub
-	cp kernel.elf iso/boot/kernel.elf
-	@echo 'set timeout=0'                    >  iso/boot/grub/grub.cfg
-	@echo 'set default=0'                    >> iso/boot/grub/grub.cfg
-	@echo 'menuentry "myosin" {'             >> iso/boot/grub/grub.cfg
-	@echo '    multiboot /boot/kernel.elf'   >> iso/boot/grub/grub.cfg
-	@echo '    boot'                         >> iso/boot/grub/grub.cfg
-	@echo '}'                                >> iso/boot/grub/grub.cfg
-	grub-mkrescue -o myosin.iso iso 2>/dev/null
-
-run: myosin.iso
-	qemu-system-i386 -cdrom myosin.iso -serial stdio
+	cp mb.elf iso/boot/mb.elf
+	@echo 'set timeout=0'                >  iso/boot/grub/grub.cfg
+	@echo 'set default=0'                >> iso/boot/grub/grub.cfg
+	@echo 'menuentry "mb" {'             >> iso/boot/grub/grub.cfg
+	@echo '    multiboot /boot/mb.elf'   >> iso/boot/grub/grub.cfg
+	@echo '    boot'                     >> iso/boot/grub/grub.cfg
+	@echo '}'                            >> iso/boot/grub/grub.cfg
+	grub-mkrescue -o mb.iso iso 2>/dev/null
+mb: mb.iso
+	qemu-system-i386 -cdrom mb.iso -serial stdio
 
 %.o: %.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -43,4 +38,4 @@ run: myosin.iso
 	$(AS) $(ASFLAGS) $< -o $@
 
 clean:
-	rm -rf *.o kernel.elf myosin.iso iso
+	rm -rf *.o mb.elf mb.iso iso
