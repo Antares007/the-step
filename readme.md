@@ -1,29 +1,4 @@
-## The Synchronization Problem Is a Cutting Problem
-> in the beginning was the Step
-
-The standard OS model of preemptive multitasking has a fundamental flaw.
-
-The flaw is that the hardware clock doesn't know how many steps a thought takes.
-
-A preemptive interrupt fires based on time. It cuts the thread wherever
-the clock ticks, mid-write, mid-read, i.e. It cuts the step.
-
-The clock erases thought-boundaries, so we spend enormous effort
-redrawing them: locks, mutexes, semaphores, atomic operations,
-all of which defend against the cut, i.e. introducing acsidental complexity.
-
-It is the price of letting mechanical time interrupt linguistic time.
-
-## The solution
-Let the thought finish. Define boundaries of a thought in first plase.
-
-The most abstract thought is the complete *Fetch-Decode-Execute loop* of
-a higher-level machine.
-
-Switch contexts only at that boundary.
-
-The machine cannot be interrupted mid-thought by construction.
-
+![the step](./docs/20260323_1328_Machine's%20Step%20Evolution_simple_compose_01kmd0bkjyfewbkzg0zefatpdw.png)
 ```js
 fetch(`
   // revolution now
@@ -165,34 +140,3 @@ function fetch(instructions, registers, os) {
   }
 }
 ```
-
-The breath between two steps is not empty.
-
-Every `setTimeout` in our `ontinue` is a yield to the host, the browser, the OS, the event loop.
-
-During that gap, sensations arrive. Mouse moves. Keys press. Timers fire. The host inhales on your
-behalf while my context sleeps.
-
-Here in js, we designed the breath as a delay for observation. But it is actually the natural
-interrupt boundary, the place where the outside world can speak.
-
-Without time-slice violence imposed from outside, but a step boundary reached from inside.
-
-    We built the hardware interrupt model and the linguistic
-    continuation model independently, on bare metal and in JavaScript,
-    and they converged to the same boundary, the voluntary pause between
-    two steps where the world is allowed to speak.
-
-    The revolution is not coming.
-
-    It already runs.
-
-    In two languages.
-
-    On two substrates.
-
-    With the same shape.
-
-    That is new.
-
-
