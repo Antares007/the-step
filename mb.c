@@ -86,9 +86,8 @@ static uint8_t stack[16384] __attribute__((aligned(16)));
 
 static void __attribute__((used)) on_interrupt(unsigned int*ctx) {
   int vector = ctx[0];
-  log("%s %d\n", __func__, ctx[0]);
   if(vector == 0) {
-    log("0x%x\n", ctx[9]);
+    log("div/0 at:0x%x [%p]eip+=2\n", ctx[9], *((void**)ctx[9]));
     ctx[9] += 2;
   } else  if (32 <= vector && vector <= 47) {
     if (vector == 33) {
@@ -97,7 +96,8 @@ static void __attribute__((used)) on_interrupt(unsigned int*ctx) {
     }
     if (vector >= 40) outb(0xA0, 0x20); // Send EOI to Slave
     outb(0x20, 0x20);                   // Send EOI to Master
-  }
+  } else
+    log("%s %d\n", __func__, vector);
 }
 static void __attribute__((used)) on_error(unsigned int*ctx) {
   log("%s %d\n", __func__, ctx[0]);
@@ -154,7 +154,7 @@ static void load_idt() {
   } __attribute__((packed)) idt_ptr = {.limit = 256 * 8 - 1, .base = (unsigned int)idt};
 
   unsigned short cs;
-  asm("mov %%cs, %0" : "=r"(cs));
+  asm volatile("mov %%cs, %0" : "=r"(cs));
 
   for (int n = 0; n < 256; n++) {
     unsigned int handler = (unsigned int)((char*)idt_handlers + (n * 32));
@@ -163,18 +163,19 @@ static void load_idt() {
   }
   asm volatile("lidt %0" : : "m"(idt_ptr));
 }
-
-static int div0() {
-  volatile int divisor = 0;
-  volatile int result = 100 / divisor;
-  return result;
-}
 static void pic_remap(void) {
     outb(0x20, 0x11); outb(0xA0, 0x11);  // ICW1
     outb(0x21, 0x20); outb(0xA1, 0x28);  // ICW2: remap master→32, slave→40
     outb(0x21, 0x04); outb(0xA1, 0x02);  // ICW3: cascade
     outb(0x21, 0x01); outb(0xA1, 0x01);  // ICW4: 8086 mode
     outb(0x21, 0xFC); outb(0xA1, 0xFF);  // mask all except IRQ0+IRQ1
+}
+#include "TSU.h"
+
+static int div0() {
+  volatile int divisor = 0;
+  volatile int result = 100 / divisor;
+  return result;
 }
 static void __attribute((used))
 kmain(mbi_t *mbi) {
@@ -194,7 +195,9 @@ kmain(mbi_t *mbi) {
     div0();
     div0();
     div0();
-    while(1);
+    topology_stepping_universe(&(operations){
+        .log = log,
+        });
 }
 void __attribute__((naked, section(".text.start")))
 _start(void) {
