@@ -93,6 +93,7 @@ function fun() {
       o(A, "t")
     }
   }
+
   function tab(o) { o("t"), o("a"), o("b") }
   function tritab(o) { o(tab),o(tab),o(tab) }
   function S(o) {
@@ -100,14 +101,16 @@ function fun() {
     o(S, tab)
   }
   const N = (handmade().tritab)
+  const crypto = require('node:crypto')
+  const sha1 = s => crypto.hash('sha1', s, 'buffer')
   console.log(
     toti(
       N,
-      "D",
-      (x,u) => `B(${JSON.stringify(x)}, ${u})`,
-      (s,t) => `T(${s}, ${t})`,
-      (r,t) => `R(${r}, ${t})`
-    )
+      sha1("D"),
+      (x,u) => sha1(`B(${JSON.stringify(x)}, ${u})`),
+      (s,t) => sha1(`T(${s}, ${t})`),
+      (r,t) => sha1(`R(${r}, ${t})`)
+    ).toString('hex')
   )
   console.log(N)
   //bnf_compiler(N)
