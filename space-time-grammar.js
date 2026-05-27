@@ -5,10 +5,6 @@ function fun() {
     o(expression)
     o(S, A, expression)
   }
-  function S(o) {
-    o("b")
-    o(S, "a")
-  }
   function expression(o) {
     o(additive)
     function additive(o) {
@@ -80,14 +76,6 @@ function fun() {
     }
   }
 
-  function A(o) {
-    o("a")
-    o(B, "o")
-    function B(o) {
-      o("b")
-      o(A, "t")
-    }
-  }
   const oDSL = pmap(S => {
     const times = [] 
     S((...spaces) => times.push(spaces.reverse().reduce(
@@ -97,180 +85,212 @@ function fun() {
     )))
     return times.reverse().reduce((s, t) => (D,B,T) => T(s, t), (D,B,T) => D())
   })
-  const N = oDSL(expression)
-  const s = toti(N)
-  bnf_compiler(s)
-  open_diagram(s)
+  function A(o) {
+    o("a")
+    o(B, "o")
+    function B(o) {
+      o("b")
+      o(A, "t")
+    }
+  }
+  function tab(o) { o("t"), o("a"), o("b") }
+  function tritab(o) { o(tab),o(tab),o(tab) }
+  function S(o) {
+    o(tab)
+    o(S, tab)
+  }
+  const N = (handmade().tritab)
+  console.log(
+    toti(
+      N,
+      "D",
+      (x,u) => `B(${JSON.stringify(x)}, ${u})`,
+      (s,t) => `T(${s}, ${t})`,
+      (r,t) => `R(${r}, ${t})`
+    )
+  )
+  console.log(N)
+  //bnf_compiler(N)
+  //console.log()
+  //const s = toti(N)
+  //bnf_compiler(s)
+  //open_diagram(s)
 }
 
 const pmap = (t, _ = Symbol()) => (S, ...a) => S[_] || (S[_] = t(S, ...a))
-const toti = pmap((T) => {
-  const Red_descend = pmap((S, c) => S(
-    (    ) => dot,
-    (x, s) => (_,B) => B(x, Red_descend(s, c)),
-    (s, t) => ((t = Red_walk(t, c)) === dot ? Red_descend(s, c)
-                              : (_,__,T) => T(Red_descend(s, c), t))
-  ))
-  const Red_walk = pmap((S, c) => S(
-    (    ) => Yellow_s === dot ? dot : Yellow_dot,
-    (x, t) => (_,B) => B(x, Green_walk(t, c)),
-    (s, t) => { for (let d = c; d; d = d[1])
-                  if (d[0] === s) return dot
-                return ((s = Red_descend(s, [s, c])) === dot ? dot
-                : (_,__,T) => T(s, Green_walk(t, c))) }
-  ))
-  const Green_walk = pmap((S, c) => S(
-    (    ) => Yellow_s === dot ? dot : Yellow_dot,
-    (x, t) => (_,B) => B(x, Green_walk(t, c)),
-    (s, t) => s === T ? (_,__,T) => T(Red_s, Green_walk(t, c))
-                      : (_,__,T) => T(toti(s), Green_walk(t, c))
-  ))
-  const Yellow_descend = pmap((S, c) => S(
-    (    ) => dot,
+const Red_Symbol = Symbol("Red")
+const toti = pmap((root, D, B, T, R) => {
+  const Red_descend = (S, c) => S(
+    (    ) => D,
+    (x, s) => B(x, Red_descend(s, c)),
+    (s, t) => (t = Red_walk(t, c)) === D ? Red_descend(s, c)
+                                         : T(Red_descend(s, c), t)
+  )
+  const Red_walk = (S, c) => S(
+    (    ) => tsvero(c[0], D, B, T, R),
+    (x, t) => B(x, Green_walk(t, c)),
+    (s, t) => { for (let d = c; d; d = d[2])
+                  if (d[0] === s) return D
+                return (s = Red_descend(s, [s, c[1] + 1, c])) === D
+                       ? D
+                       : T(s, Green_walk(t, c)) }
+  )
+  const Green_walk = (S, c) => S(
+    (    ) => tsvero(c[0], D, B, T, R),
+    (x, t) => B(x, Green_walk(t, c)),
+    (s, t) => s === root ? R(c[1], Green_walk(t, c))
+                         : T(toti(s, D, B, T, R), Green_walk(t, c))
+  )
+  return Red_descend(root, [root, 0])
+}, Red_Symbol)
+const Yellow_Symbol = Symbol("Yellow")
+const tsvero = pmap((root, D, B, T, R) => {
+  const Yellow_descend = (S, c) => S(
+    (    ) => D,
     (_, s) => Yellow_descend(s, c),
-    (s, t) => (t = Yellow_walk(t, c)) === dot ? Yellow_descend(s, c)
-                                : (_,__,T) => T(Yellow_descend(s, c), t)
-  ))
-  const Yellow_walk = pmap((S, c) => S(
-    (    ) => dot,
-    (    ) => dot,
-    (s, t) => { for (let d = c; d; d = d[1])
-                  if (d[0] === s) return ( d[1] ? dot : Blue_walk(t, c))
-                return ((s = Yellow_descend(s, [s, c])) === dot ? dot
-                               : (_,__,T) => T(s, Blue_walk(t, c))) }
-  ))
-  const Blue_walk = pmap((S, c) => S(
-    (    ) => c[1] ? dot : Yellow_dot,
-    (x, t) => (_,B) => B(x, Blue_walk(t, c)),
-    (s, t) => s === T ? (_,__,T) => T(Red_s, Blue_walk(t, c))
-                      : (_,__,T) => T(toti(s), Blue_walk(t, c))
-  ))
-  const dot = D => D()
-  const Yellow_dots= (_,__,T) => T(Yellow_s, dot)
-  const Yellow_dot = (_,__,T) => T(Yellow_dots, dot)
-  const Yellow_s = Yellow_descend(T, [T])
-  const Red_s = Red_descend(T, [T])
-  return Red_s
-})
+    (s, t) => (t = Yellow_walk(t, c)) === D ? Yellow_descend(s, c)
+                                            : T(Yellow_descend(s, c), t)
+  )
+  const Yellow_walk = (S, c) => S(
+    (    ) => D,
+    (    ) => D,
+    (s, t) => { for (let d = c; d; d = d[2])
+                  if (d[0] === s) return d[2] ? D : Blue_walk(t, c)
+                return (s = Yellow_descend(s, [s, c[1] + 1, c])) === D
+                       ? D
+                       : T(s, Blue_walk(t, c)) }
+  )
+  const Blue_walk = (S, c) => S(
+    (    ) => c[2] ? dot : R(0, D),
+    (x, t) => B(x, Blue_walk(t, c)),
+    (s, t) => s === root ? R(c[1], Blue_walk(t, c))
+                         : T(toti(s, D, B, T, R), Blue_walk(t, c))
+  )
+  const toti = Yellow_descend(root, [root, 0])
+  return toti === D ? D : T(T(toti, D), D)
+}, Yellow_Symbol)
 
+function handmade() {
+  const dot     = (d,b,t) => d() 
+  const S_t1    = (d,b,t) => b('b', dot)
+  const S_t22   = (d,b,t) => b('a', dot)
+  const S_t2    = (d,b,t) => t(S, S_t22)
+  const S_s2    = (d,b,t) => t(dot, S_t2)
+  const S       = (d,b,t) => t(S_s2, S_t1)
+
+  const tab2    = (d,b,t) => b('b', dot)
+  const tab1    = (d,b,t) => b('a', tab2)
+  const tab     = (d,b,t) => b('t', tab1)
+
+  const tritab13= (d,b,t) => t(tab, dot)
+  const tritab12= (d,b,t) => t(tab, tritab13)
+  const tritab11= (d,b,t) => t(tab, tritab12)
+  const tritab  = (d,b,t) => t(dot, tritab11)
+
+
+  const Bt11= (d,b,t) => b("t", dot)
+  const Bt1 = (d,b,t) => t(As0, Bt11)
+  const Bs1 = (d,b,t) => t(dot, Bt1)
+  const Bt0 = (d,b,t) => b("b", dot)
+  const Bs0 = (d,b,t) => t(Bs1, Bt0)
+
+  const At11= (d,b,t) => b("o", dot)
+  const At1 = (d,b,t) => t(Bs0, At11)
+  const As1 = (d,b,t) => t(dot, At1)
+  const At0 = (d,b,t) => b("a", dot)
+  const As0 = (d,b,t) => t(As1, At0)
+
+  const alfz = (d,b,t) => b("z",dot)
+  const alfy = (d,b,t) => b("y",alfz)
+  const alfx = (d,b,t) => b("x",alfy)
+  const alfw = (d,b,t) => b("w",alfx)
+  const alfv = (d,b,t) => b("v",alfw)
+  const alfu = (d,b,t) => b("u",alfv)
+  const alft = (d,b,t) => b("t",alfu)
+  const alfs = (d,b,t) => b("s",alft)
+  const alfr = (d,b,t) => b("r",alfs)
+  const alfq = (d,b,t) => b("q",alfr)
+  const alfp = (d,b,t) => b("p",alfq)
+  const alfo = (d,b,t) => b("o",alfp)
+  const alfn = (d,b,t) => b("n",alfo)
+  const alfm = (d,b,t) => b("m",alfn)
+  const alfl = (d,b,t) => b("l",alfm)
+  const alfk = (d,b,t) => b("k",alfl)
+  const alfj = (d,b,t) => b("j",alfk)
+  const alfi = (d,b,t) => b("i",alfj)
+  const alfh = (d,b,t) => b("h",alfi)
+  const alfg = (d,b,t) => b("g",alfh)
+  const alff = (d,b,t) => b("f",alfg)
+  const alfe = (d,b,t) => b("e",alff)
+  const alfd = (d,b,t) => b("d",alfe)
+  const alfc = (d,b,t) => b("c",alfd)
+  const alfb = (d,b,t) => b("b",alfc)
+  const alfa = (d,b,t) => b("a",alfb)
+
+  const name_t1 = (d,b,t) => t(alfa,    dot)
+  const name_t2 = (d,b,t) => t(name,    name_t1)
+  const name_s2 = (d,b,t) => t(dot,     name_t2)
+  const name    = (d,b,t) => t(name_s2, name_t1)
+
+  const quantifier2 = (d,b,t) => b("*",         dot);
+  const quantifier1 = (d,b,t) => b("+",         quantifier2);
+  const quantifier0 = (d,b,t) => b("?",         quantifier1);
+  const quantifier  = (d,b,t) => t(quantifier0, dot) 
+
+  const space_char2 = (d,b,t) => b("\n",dot)
+  const space_char1 = (d,b,t) => b("\t",space_char2)
+  const space_char  = (d,b,t) => b(" ", space_char1)
+
+  const sp_t1 = (d,b,t) => t(space_char,dot)
+  const sp_t2 = (d,b,t) => t(sp,        sp_t1)
+  const sp_s2 = (d,b,t) => t(dot,       sp_t2)
+  const sp    = (d,b,t) => t(sp_s2,     dot)
+
+  const primary_t1 = (d,b,t) => t(name,       dot)
+  const primary_t22= (d,b,t) => b('"',        dot)
+  const primary_t21= (d,b,t) => t(alfa,       primary_t22)
+  const primary_t2 = (d,b,t) => b('"',        primary_t21)
+  const primary_t34= (d,b,t) => b(')',        dot)
+  const primary_t33= (d,b,t) => t(sp,         primary_t34)
+  const primary_t32= (d,b,t) => t(productions,primary_t33)
+  const primary_t31= (d,b,t) => t(sp,         primary_t32)
+  const primary_t3 = (d,b,t) => b('(',        primary_t31)
+  const primary_s3 = (d,b,t) => t(dot,        primary_t3) 
+  const primary_s2 = (d,b,t) => t(primary_s3, primary_t2) 
+  const primary    = (d,b,t) => t(primary_s2, primary_t1)
+
+  const production_t11= (d,b,t) => t(quantifier,    dot)
+  const production_t1 = (d,b,t) => t(primary,       production_t11)
+  const production_t21= (d,b,t) => t(sp,            production_t1)
+  const production_t2 = (d,b,t) => t(production,    production_t21)
+  const production_s2 = (d,b,t) => t(dot,           production_t2)
+  const production    = (d,b,t) => t(production_s2, production_t1)
+
+  const productions_t1  = (d,b,t) => t(production,    dot)
+  const productions_t23 = (d,b,t) => t(sp,            productions_t1)
+  const productions_t22 = (d,b,t) => b(',',           productions_t23)
+  const productions_t21 = (d,b,t) => t(sp,            productions_t22)
+  const productions_t2  = (d,b,t) => t(productions,   productions_t21)
+  const productions_s2  = (d,b,t) => t(dot,           productions_t2)
+  const productions     = (d,b,t) => t(productions_s2,productions_t1)
+
+  const declaration_t14 = (d,b,t) => b('.',         dot)
+  const declaration_t13 = (d,b,t) => t(sp,          declaration_t14)
+  const declaration_t12 = (d,b,t) => t(productions, declaration_t13)
+  const declaration_t11 = (d,b,t) => t(sp,          declaration_t12)
+  const declaration_t1  = (d,b,t) => t(name,        declaration_t11)
+  const declaration     = (d,b,t) => t(dot,         declaration_t1)
+
+  const declarations_t1 = (d,b,t) => t(declaration,     dot)
+  const declarations_t21= (d,b,t) => t(sp,              declarations_t1)
+  const declarations_t2 = (d,b,t) => t(declarations,    declarations_t21)
+  const declarations_s2 = (d,b,t) => t(dot,             declarations_t2)
+  const declarations    = (d,b,t) => t(declarations_s2, declarations_t1)
+  return {declarations,S,tritab,tab,As0}
+}
 function fun2() {
 
 
-const dot     = (d,b,t) => d() 
-const S_t1    = (d,b,t) => b('b', dot)
-const S_t22   = (d,b,t) => b('a', dot)
-const S_t2    = (d,b,t) => t(S, S_t22)
-const S_s2    = (d,b,t) => t(dot, S_t2)
-const S       = (d,b,t) => t(S_s2, S_t1)
-
-const tab2    = (d,b,t) => b('b', dot)
-const tab1    = (d,b,t) => b('a', tab2)
-const tab     = (d,b,t) => b('t', tab1)
-
-const tritab13= (d,b,t) => t(tab, dot)
-const tritab12= (d,b,t) => t(tab, tritab13)
-const tritab11= (d,b,t) => t(tab, tritab12)
-const tritab  = (d,b,t) => t(dot, tritab11)
-
-
-const Bt11= (d,b,t) => b("t", dot)
-const Bt1 = (d,b,t) => t(As0, Bt11)
-const Bs1 = (d,b,t) => t(dot, Bt1)
-const Bt0 = (d,b,t) => b("b", dot)
-const Bs0 = (d,b,t) => t(Bs1, Bt0)
-
-const At11= (d,b,t) => b("o", dot)
-const At1 = (d,b,t) => t(Bs0, At11)
-const As1 = (d,b,t) => t(dot, At1)
-const At0 = (d,b,t) => b("a", dot)
-const As0 = (d,b,t) => t(As1, At0)
-
-const alfz = (d,b,t) => b("z",dot)
-const alfy = (d,b,t) => b("y",alfz)
-const alfx = (d,b,t) => b("x",alfy)
-const alfw = (d,b,t) => b("w",alfx)
-const alfv = (d,b,t) => b("v",alfw)
-const alfu = (d,b,t) => b("u",alfv)
-const alft = (d,b,t) => b("t",alfu)
-const alfs = (d,b,t) => b("s",alft)
-const alfr = (d,b,t) => b("r",alfs)
-const alfq = (d,b,t) => b("q",alfr)
-const alfp = (d,b,t) => b("p",alfq)
-const alfo = (d,b,t) => b("o",alfp)
-const alfn = (d,b,t) => b("n",alfo)
-const alfm = (d,b,t) => b("m",alfn)
-const alfl = (d,b,t) => b("l",alfm)
-const alfk = (d,b,t) => b("k",alfl)
-const alfj = (d,b,t) => b("j",alfk)
-const alfi = (d,b,t) => b("i",alfj)
-const alfh = (d,b,t) => b("h",alfi)
-const alfg = (d,b,t) => b("g",alfh)
-const alff = (d,b,t) => b("f",alfg)
-const alfe = (d,b,t) => b("e",alff)
-const alfd = (d,b,t) => b("d",alfe)
-const alfc = (d,b,t) => b("c",alfd)
-const alfb = (d,b,t) => b("b",alfc)
-const alfa = (d,b,t) => b("a",alfb)
-
-const name_t1 = (d,b,t) => t(alfa,    dot)
-const name_t2 = (d,b,t) => t(name,    name_t1)
-const name_s2 = (d,b,t) => t(dot,     name_t2)
-const name    = (d,b,t) => t(name_s2, name_t1)
-
-const quantifier2 = (d,b,t) => b("*",         dot);
-const quantifier1 = (d,b,t) => b("+",         quantifier2);
-const quantifier0 = (d,b,t) => b("?",         quantifier1);
-const quantifier  = (d,b,t) => t(quantifier0, dot) 
-
-const space_char2 = (d,b,t) => b("\n",dot)
-const space_char1 = (d,b,t) => b("\t",space_char2)
-const space_char  = (d,b,t) => b(" ", space_char1)
-
-const sp_t1 = (d,b,t) => t(space_char,dot)
-const sp_t2 = (d,b,t) => t(sp,        sp_t1)
-const sp_s2 = (d,b,t) => t(dot,       sp_t2)
-const sp    = (d,b,t) => t(sp_s2,     dot)
-
-const primary_t1 = (d,b,t) => t(name,       dot)
-const primary_t22= (d,b,t) => b('"',        dot)
-const primary_t21= (d,b,t) => t(alfa,       primary_t22)
-const primary_t2 = (d,b,t) => b('"',        primary_t21)
-const primary_t34= (d,b,t) => b(')',        dot)
-const primary_t33= (d,b,t) => t(sp,         primary_t34)
-const primary_t32= (d,b,t) => t(productions,primary_t33)
-const primary_t31= (d,b,t) => t(sp,         primary_t32)
-const primary_t3 = (d,b,t) => b('(',        primary_t31)
-const primary_s3 = (d,b,t) => t(dot,        primary_t3) 
-const primary_s2 = (d,b,t) => t(primary_s3, primary_t2) 
-const primary    = (d,b,t) => t(primary_s2, primary_t1)
-
-const production_t11= (d,b,t) => t(quantifier,    dot)
-const production_t1 = (d,b,t) => t(primary,       production_t11)
-const production_t21= (d,b,t) => t(sp,            production_t1)
-const production_t2 = (d,b,t) => t(production,    production_t21)
-const production_s2 = (d,b,t) => t(dot,           production_t2)
-const production    = (d,b,t) => t(production_s2, production_t1)
-
-const productions_t1  = (d,b,t) => t(production,    dot)
-const productions_t23 = (d,b,t) => t(sp,            productions_t1)
-const productions_t22 = (d,b,t) => b(',',           productions_t23)
-const productions_t21 = (d,b,t) => t(sp,            productions_t22)
-const productions_t2  = (d,b,t) => t(productions,   productions_t21)
-const productions_s2  = (d,b,t) => t(dot,           productions_t2)
-const productions     = (d,b,t) => t(productions_s2,productions_t1)
-
-const declaration_t14 = (d,b,t) => b('.',         dot)
-const declaration_t13 = (d,b,t) => t(sp,          declaration_t14)
-const declaration_t12 = (d,b,t) => t(productions, declaration_t13)
-const declaration_t11 = (d,b,t) => t(sp,          declaration_t12)
-const declaration_t1  = (d,b,t) => t(name,        declaration_t11)
-const declaration     = (d,b,t) => t(dot,         declaration_t1)
-
-const declarations_t1 = (d,b,t) => t(declaration,     dot)
-const declarations_t21= (d,b,t) => t(sp,              declarations_t1)
-const declarations_t2 = (d,b,t) => t(declarations,    declarations_t21)
-const declarations_s2 = (d,b,t) => t(dot,             declarations_t2)
-const declarations    = (d,b,t) => t(declarations_s2, declarations_t1)
 
 
 
