@@ -39,8 +39,8 @@ function fun() {
 //const tritab  = (d,b,t) => t(dot, tritab11)
 
 const S = o => {
-  o(tritab)
-  o(S, tritab)
+  o('b')
+  o(S, 'a')
 }
 const tab = o => {
   o('t')
@@ -52,49 +52,52 @@ const tritab = o => {
 }
 const R = o => o('r', R)
 
-  const N = oDSL(expression)
-  open_diagram(N)
+  const N = oDSL(tritab)
+  //open_diagram(N)
 
-  bnf_compiler(N)
+  //bonf_compiler(N)
   console.log()
   console.log('wut?')
   const s = toti(N)
   bnf_compiler(s)
-  open_diagram(s)
+  //open_diagram(s)
 }
 
-const D = D => D()
-const B = (x, u) => (_,B) => B(x, u)
-const T = (s, t) => (_,__,T) => T(s, t)
 const toti = pmap((root) => {
+  const D = D => D("Red")
+  const B = (...a) => (_,B) => B(...a)
+  const T = (...a) => (_,__,T) => T(...a)
   const Red_descend = (S, c) => S(
     (    ) => D,
-    (x, s) => T(Red_descend(s, c), B(x, tsvero(c[0]))),
+    (x, s) => T(Red_descend(s, c), B(x, tsvero(c[0]), "Red"), "Red"),
     (s, t) => (t = Red_walk(t, c)) === D ? Red_descend(s, c)
-                                         : T(Red_descend(s, c), t)
+                                         : T(Red_descend(s, c), t, "Red")
   )
   const Red_walk = (S, c) => S(
     (    ) => tsvero(c[0]),
-    (x, t) => B(x, Green_walk(t, c)),
+    (x, t) => B(x, Green_walk(t, c), "Red"),
     (s, t) => { for (let d = c; d; d = d[1])
                   if (d[0] === s) return D
                 return (s = Red_descend(s, [s, c])) === D
                       ? D
-                      : T(s, Green_walk(t, c)) }
+                      : T(s, Green_walk(t, c), "Red") }
   )
   const Green_walk = (S, c) => S(
     (    ) => tsvero(c[0]),
-    (x, t) => B(x, Green_walk(t, c)),
-    (s, t) => (t = Green_walk(t, c), (_,__,T) => T(toti(s), t))
+    (x, t) => B(x, Green_walk(t, c), "Green"),
+    (s, t) => (t = Green_walk(t, c), (_,__,T) => T(toti(s), t, "Green"))
   )
   return Red_descend(root, [root])
 }, Symbol('Red'))
 const tsvero = pmap((root) => {
+  const D = D => D("Yellow")
+  const B = (...a) => (_,B) => B(...a)
+  const T = (...a) => (_,__,T) => T(...a)
   const Yellow_descend = (S, c) => S(
     (    ) => D,
     (_, s) => Yellow_descend(s, c),
-    (s, t) =>((t = Yellow_walk(t, c)) === D ? Yellow_descend(s, c)
-                                            : T(Yellow_descend(s, c), t))
+    (s, t) => (t = Yellow_walk(t, c)) === D ? Yellow_descend(s, c)
+                                            : T(Yellow_descend(s, c), t, "Yellow")
   )
   const Yellow_walk = (S, c) => S(
     (    ) => D,
@@ -103,15 +106,15 @@ const tsvero = pmap((root) => {
                   if (d[0] === s) return d[1] ? D : Blue_walk(t, c)
                 return (s = Yellow_descend(s, [s, c])) === D
                       ? D
-                      : T(s, Blue_walk(t, c)) }
+                      : T(s, Blue_walk(t, c), "Yellow") }
   )
   const Blue_walk = (S, c) => S(
-    (    ) => c[1] ? D : Yellow_dot,
-    (x, t) => B(x, Blue_walk(t, c)),
-    (s, t) => (t = Blue_walk(t, c), (_,__,T) => T(toti(s), t))
+    (    ) => c[1] ? D => D("Blue") : Yellow_dot,
+    (x, t) => B(x, Blue_walk(t, c), "Blue"),
+    (s, t) => (t = Blue_walk(t, c), (_,__,T) => T(toti(s), t, "Blue"))
   )
-  const Yellow_dot  = (_,__,T) => T(Yellow_dots, D)
-  const Yellow_dots = (_,__,T) => T(Yellow_s, D)
+  const Yellow_dot  = (_,__,T) => T(Yellow_dots, D, "Yellow")
+  const Yellow_dots = (_,__,T) => T(Yellow_s, D, "Yellow")
   const Yellow_s = Yellow_descend(root, [root])
   return Yellow_s === D ? D : Yellow_dot
 }, Symbol('Yellow'))

@@ -1,35 +1,43 @@
 export default function bnf_compiler(...symbols) {
-  const write = (args) => process.stdout.write(args)
+  const symbols_color = symbols.map(_ => "Red")
+  const ansi = c => (s) => write_(`\x1b[${c}m${s}\x1b[0m`)
+  const colours_fly = {
+    Red     : ansi(41),
+    Green   : ansi(42),
+    Yellow  : ansi(43),
+    Blue    : ansi(44),
+  }
+  const write_ = (s) => process.stdout.write(s)
+  const write = (s, q) => colours_fly[q] ? colours_fly[q](s) : ((console.log(q)),write_(s))
   let cs = 0
-  let next = d=>d()
+  let next = d => d()
   const name = s => symbols.indexOf(s) + ""
+
+  const iotD= (      q) =>  os(next)
+  const otB = (x, t, q) =>  (write(JSON.stringify(x), q), it(t))
+  const otT = (s, t, q) =>  { if(symbols.indexOf(s) === -1)
+                                (symbols.push(s), symbols_color.push(q))
+                              write(name(s), q), it(t) }
+  const itB = (x, t, q) =>  (write(' ', q), otB(x, t, q))
+  const itT = (s, t, q) =>  (write(' ', q), otT(s, t, q))
+
+  const iosD= (      q) =>  (write('.\n', q), fetch())
+  const iosB= (x, s, q) =>  (write(JSON.stringify(x), q), os(s))
+  const iosT= (s, t, q) =>  (next = s, ot(t))
+
+  const osB = (x, s, q) =>  (write(' ' , q), iosB(x, s, q))
+  const osT = (s, t, q) =>  (write(' ' , q), iosT(s, t, q))
+  const isB = (x, s, q) =>  (write(', ', q), iosB(x, s, q))
+  const isT = (s, t, q) =>  (write(', ', q), iosT(s, t, q))
+
+  const ot = (s) => s(iotD,  otB, otT)
+  const it = (s) => s(iotD,  itB, itT)
+  const is = (s) => s(iosD,  osB, osT)
+  const os = (s) => s(iosD,  isB, isT)
+
   fetch()
-
-  function time_dot         (   ) { next_space(next) }
-  function time_termin      (x,t) { write(JSON.stringify(x)), stm(next_time, t) }
-  function time_branch      (s,t) { if(symbols.indexOf(s) === -1)
-                                      symbols.push(s)
-                                    write(name(s)), stm(next_time, t) }
-  function next_time_termin (x,t) { write(' '), time_termin(x, t) }
-  function next_time_branch (s,t) { write(' '), time_branch(s, t) }
-
-  function space_dot        (   ) { write('.\n'),             stm(fetch) }
-  function space_termin     (x,s) { write(JSON.stringify(x)), stm(next_space, s)}
-  function space_branch     (s,t) { next = s,                 init_time(t)}
-
-  function init_space_termin(x,s) { write(' '), space_termin(x, s) }
-  function init_space_branch(s,t) { write(' '), space_branch(s, t) }
-  function next_space_termin(x,s) { write(', '), stm(space_termin, x, s) }
-  function next_space_branch(s,t) { write(', '), stm(space_branch, s, t) }
-
-  function init_time (s) { s(time_dot,  time_termin,       time_branch) }
-  function next_time (s) { s(time_dot,  next_time_termin,  next_time_branch) }
-  function init_space(s) { s(space_dot, init_space_termin, init_space_branch) }
-  function next_space(s) { s(space_dot, next_space_termin, next_space_branch) }
-
   function fetch() {
     if(cs < symbols.length) 
-      next = symbols[cs++], write(name(next)), stm(init_space, next)
+      next = symbols[cs], write(name(next), symbols_color[cs++]), is(next)
   }
-  function stm(f,...args) { f(...args) }
 }
