@@ -3,91 +3,116 @@ import bnf_compiler from './bnf_compiler.js'
 import pmap from './pmap.js'
 import oDSL from './dsl.js'
 
+import {expression} from './grammars.js'
+
 function fun() {
   function A(o) {
-    o(B)
-    o(B, A)
+    o('a')
+    o(B, 'o')
     function B(o) {
-      o(A)
-      o(A, B)
+      o('b')
+      o(A, 't')
     }
   }
-  function tab(o) { o("t"), o("a"), o("b") }
-  function tritab(o) { o(tab),o(tab),o(tab) }
-  function S(o) {
-    o(tab)
-    o(S, tab)
-  }
-  function R(o) { o('r', M) }
-  function M(o) { o('m', R) }
-  const N = oDSL(R)
+
+  const uc = pmap(S => S(
+    () => S,
+    (x, u) => (_,B) => B(x.toUpperCase(), uc(u)),
+    (s, t) => (_,__,T) => T(uc(s), uc(t)),
+  ))
+
+//const dot     = (d,b,t) => d() 
+//const S_t1    = (d,b,t) => b('b', dot)
+//const S_t22   = (d,b,t) => b('a', dot)
+//const S_t2    = (d,b,t) => t(S, S_t22)
+//const S_s2    = (d,b,t) => t(dot, S_t2)
+//const S       = (d,b,t) => t(S_s2, S_t1)
+//
+//const tab2    = (d,b,t) => b('b', dot)
+//const tab1    = (d,b,t) => b('a', tab2)
+//const tab     = (d,b,t) => b('t', tab1)
+//
+//const tritab14= (d,b,t) => t(S, dot)
+//const tritab13= (d,b,t) => t(tab, tritab14)
+//const tritab12= (d,b,t) => t(tab, tritab13)
+//const tritab11= (d,b,t) => t(tab, tritab12)
+//const tritab  = (d,b,t) => t(dot, tritab11)
+
+const S = o => {
+  o(tritab)
+  o(S, tritab)
+}
+const tab = o => {
+  o('t')
+  o('a')
+  o('b')
+}
+const tritab = o => {
+  o(tab, tab, tab, S)
+}
+const R = o => o('r', R)
+
+  const N = oDSL(expression)
   open_diagram(N)
+
   bnf_compiler(N)
-  //console.log()
-  //const s = toti(N)
-  //bnf_compiler(s)
+  console.log()
+  console.log('wut?')
+  const s = toti(N)
+  bnf_compiler(s)
+  open_diagram(s)
 }
 
-const toti = ((root, r) => {
-  const D = D => D()
-  const B = (x, u) => (_,B) => B(x, u)
-  const T = (s, t) => (_,__,T) => T(s, t)
-  r = [root, r, (f, t, c) => (_,__,T) => T(Red_s, f(t, c))]
+const D = D => D()
+const B = (x, u) => (_,B) => B(x, u)
+const T = (s, t) => (_,__,T) => T(s, t)
+const toti = pmap((root) => {
   const Red_descend = (S, c) => S(
     (    ) => D,
-    (x, s) => B(x, Red_descend(s, c)),
+    (x, s) => T(Red_descend(s, c), B(x, tsvero(c[0]))),
     (s, t) => (t = Red_walk(t, c)) === D ? Red_descend(s, c)
                                          : T(Red_descend(s, c), t)
   )
   const Red_walk = (S, c) => S(
-    (    ) => tsvero(c[0], r),
+    (    ) => tsvero(c[0]),
     (x, t) => B(x, Green_walk(t, c)),
     (s, t) => { for (let d = c; d; d = d[1])
                   if (d[0] === s) return D
                 return (s = Red_descend(s, [s, c])) === D
-                       ? D
-                       : T(s, Green_walk(t, c)) }
+                      ? D
+                      : T(s, Green_walk(t, c)) }
   )
   const Green_walk = (S, c) => S(
-    (    ) => tsvero(c[0], r),
+    (    ) => tsvero(c[0]),
     (x, t) => B(x, Green_walk(t, c)),
-    (s, t) => { for (let d = r; d; d = d[1])
-                  if (d[0] === s) return d[2](Green_walk, t, c)
-                return T(toti(s, r), Green_walk(t, c)) }
+    (s, t) => (t = Green_walk(t, c), (_,__,T) => T(toti(s), t))
   )
-  const Red_s = Red_descend(root, [root])
-  return Red_s
-})
-const tsvero = pmap((root, rec) => {
-  const D = D => D()
-  const B = (x, u) => (_,B) => B(x, u)
-  const T = (s, t) => (_,__,T) => T(s, t)
-  const Yellow_descend = pmap((S, c) => S(
+  return Red_descend(root, [root])
+}, Symbol('Red'))
+const tsvero = pmap((root) => {
+  const Yellow_descend = (S, c) => S(
     (    ) => D,
     (_, s) => Yellow_descend(s, c),
-    (s, t) => (t = Yellow_walk(t, c)) === D ? Yellow_descend(s, c)
-                                            : T(Yellow_descend(s, c), t)
-  ))
-  const Yellow_walk = pmap((S, c) => S(
+    (s, t) =>((t = Yellow_walk(t, c)) === D ? Yellow_descend(s, c)
+                                            : T(Yellow_descend(s, c), t))
+  )
+  const Yellow_walk = (S, c) => S(
     (    ) => D,
     (    ) => D,
     (s, t) => { for (let d = c; d; d = d[1])
                   if (d[0] === s) return d[1] ? D : Blue_walk(t, c)
                 return (s = Yellow_descend(s, [s, c])) === D
-                       ? D
-                       : T(s, Blue_walk(t, c)) }
-  ))
-  const Blue_walk = pmap((S, c) => S(
-    (    ) => c[2] ? D : Yellow_dot,
+                      ? D
+                      : T(s, Blue_walk(t, c)) }
+  )
+  const Blue_walk = (S, c) => S(
+    (    ) => c[1] ? D : Yellow_dot,
     (x, t) => B(x, Blue_walk(t, c)),
-    (s, t) => { for (let d = r; d; d = d[1])
-                  if (d[0] === s) return d[2](Blue_walk, t, c)
-                return T(toti(s, r), Blue_walk(t, c)) }
-  ))
+    (s, t) => (t = Blue_walk(t, c), (_,__,T) => T(toti(s), t))
+  )
   const Yellow_dot  = (_,__,T) => T(Yellow_dots, D)
   const Yellow_dots = (_,__,T) => T(Yellow_s, D)
   const Yellow_s = Yellow_descend(root, [root])
   return Yellow_s === D ? D : Yellow_dot
-})
-
+}, Symbol('Yellow'))
 fun()
