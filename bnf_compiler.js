@@ -8,7 +8,7 @@ export default function bnf_compiler(...symbols) {
     Blue    : ansi(44),
   }
   const write_ = (s) => process.stdout.write(s)
-  const write = (s, q) => colours_fly[q] ? colours_fly[q](s) : ((console.log(q)),write_(s))
+  const write = (s, q) => colours_fly[q] ? colours_fly[q](s) : write_(s)
   let cs = 0
   let next = d => d()
   const name = s => symbols.indexOf(s) + ""

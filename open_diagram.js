@@ -37,10 +37,10 @@ export default function open_diagram(...args) {
     for(let i = 0; i < symbols.length; i++) {
       const s = symbols[i] 
       const n = s.name
-      s((    ) =>  attrs[i] = [0, n], 
-        (x, u) => (attrs[i] = [1, n, x], edges.push([i, iof(u), 1])),
-        (s, t) => (attrs[i] = [2, n],    edges.push([i, iof(s), 0]),
-                                         edges.push([i, iof(t), 1])))
+      s((      q) =>  attrs[i] = [0, n, q], 
+        (x, u, q) => (attrs[i] = [1, n, q, x], edges.push([i, iof(u), 1])),
+        (s, t, q) => (attrs[i] = [2, n, q],    edges.push([i, iof(s), 0]),
+                                               edges.push([i, iof(t), 1])))
     }
     return (`---
 config:
@@ -48,9 +48,13 @@ config:
 ---
 flowchart TB
 ` +
-      attrs.map(([op,n,x],i) => i + (op === 0 ? '@{ shape: framed-circle }'
-        :op === 1 ? '(('+JSON.stringify(x.replace(/"/g,"&quot;"))+'))'
-          :           '(['+(n||i)+'])')).join('\n')
+      attrs.map(([op,n,q,x],i) => i + (
+         op === 0 ? '@{ shape: framed-circle }'
+        :op === 1 ? '['+JSON.stringify(x.replace(/"/g,"&quot;"))+']'
+        :           '(['+(n||i)+'])')
+        ).join('\n')
+        + '\n' +
+      attrs.map(([op,n,q,x],i) => `style ${i} color:${q?'Black':'White'},stroke:${q?'Black':'White'},fill:${q}`).join('\n')
         + '\n' +
         edges.map(([a,b,c]) => a+(c ?' -':' .')+'-> '+b).join('\n')
       )

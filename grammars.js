@@ -42,32 +42,9 @@ export function declarations(o) {
       o(name, alfa)
     }
     function alfa(o) {
-      ;(o("a"),
+        o("a"),
         o("b"),
-        o("c"),
-        o("d"),
-        o("e"),
-        o("f"),
-        o("g"),
-        o("h"),
-        o("i"),
-        o("j"),
-        o("k"),
-        o("l"),
-        o("m"),
-        o("n"),
-        o("o"),
-        o("p"),
-        o("q"),
-        o("r"),
-        o("s"),
-        o("t"),
-        o("u"),
-        o("v"),
-        o("w"),
-        o("x"),
-        o("y"),
-        o("z"))
+        o("0")
     }
     function productions(o) {
       o(production)
