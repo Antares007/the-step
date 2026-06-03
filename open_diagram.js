@@ -49,10 +49,11 @@ flowchart TB`
     + '\n' +  attrs.map(([op,n,q,x],i) => i + (
         op === 0 ? '@{ shape: framed-circle }'
       : op === 1 ? '['+JSON.stringify(x.replace(new RegExp('"', 'g'), "&quot;"))+']'
-      :            '(['+(n||i)+'])'
+      :            '(("T"))'
     )).join('\n')
-    + '\n' +  attrs.map(([op,n,q,x],i) => 'style '+i+' color:Black,stroke:Black,fill:'+(q || "Gray")).join('\n')
+    + '\n' +  attrs.map(([op,n,q,x],i) => 'style '+i+' color:Black,stroke:Black,fill:'+colors[q|0]).join('\n')
     + '\n' +  edges.map(([a,b,c]) => a+(c ?' -':' .')+'-> '+b).join('\n')
   )
 }
+const colors = ["Gray", "Red", "Green", "Yellow", "Blue"]
 
