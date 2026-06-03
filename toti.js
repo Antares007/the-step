@@ -1,10 +1,14 @@
 const block = (...a) => (_,B) => B(...a)
 const tword = (...a) => (_,__,T) => T(...a)
 const Red = 1, Green = 2, Yellow = 3, Blue = 4
-
 const Τ = Symbol("Τ")
-const toti = S => S[Τ] ? S[Τ] : (S[Τ] = Red_descend(S, [S], d => d(Red)))
-
+const toti = S => {
+  if (S[Τ]) return S[Τ]
+  const d = d => d(Red)
+  const s = Red_descend(S, [S], d)
+  return S[Τ] = (s === d ? tword(d, tsvero(S)) : s)
+}
+export default toti
 const Δ = Symbol("Δ")
 const tsvero = S => {
   if (S[Δ]) return S[Δ]
@@ -17,9 +21,6 @@ const tsvero = S => {
     return S[Δ] = b
   }
 }
-
-export default toti
-
 const Red_descend = (S, c, d) => S(
   (    ) => d,
   (x, s) => tword(Red_descend(s, c, d),
@@ -46,16 +47,16 @@ const Green_walk = (S, c, d) => S(
 const Yellow_descend = (S, c, d) => S(
   (    ) => d,
   (_, s) => Yellow_descend(s, c, d),
-  (s, t) => (t = Yellow_walk(t, c, d)) === d
+  (s, t) =>     (t = Yellow_walk(t, c, d)) === d
           ?       Yellow_descend(s, c, d)
           : tword(Yellow_descend(s, c, d), t, Yellow)
 )
 const Yellow_walk = (S, c, d) => S(
   (    ) => d,
   (    ) => d,
-  (s, t) => { for (let i = c; i; i = i[1])
-                if (i[0] === s)
-                  return i[1] ? d : Blue_walk(t, c, d)
+  (s, t) => { for (let C = c; C; C = C[1])
+                if (C[0] === s)
+                  return C[1] ? d : Blue_walk(t, c, d)
               return (s = Yellow_descend(s, [s, c], d)) === d
                     ? d
                     : tword(s, Blue_walk(t, c, d), Yellow) }

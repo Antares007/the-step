@@ -36,9 +36,9 @@ function mermaid(...symbols) {
     const s = symbols[i] 
     const n = s.name
     s((      q) =>  attrs[i] = [0, n, q], 
-      (x, u, q) => (attrs[i] = [1, n, q, x], edges.push([i, iof(u), 1])),
-      (s, t, q) => (attrs[i] = [2, n, q],    edges.push([i, iof(s), 0]),
-        edges.push([i, iof(t), 1])))
+      (x, u, q) => (attrs[i] = [1, n, q, x], edges.push([i, iof(u), 0])),
+      (s, t, q) => (attrs[i] = [2, n, q],    edges.push([i, iof(s), 1]),
+                                             edges.push([i, iof(t), 0])))
   }
   return (
 `---
@@ -49,7 +49,7 @@ flowchart TB`
     + '\n' +  attrs.map(([op,n,q,x],i) => i + (
         op === 0 ? '@{ shape: framed-circle }'
       : op === 1 ? '['+JSON.stringify(x.replace(new RegExp('"', 'g'), "&quot;"))+']'
-      :            '(("T"))'
+      :            '(("' + (i ? "T" : "0") +'"))'
     )).join('\n')
     + '\n' +  attrs.map(([op,n,q,x],i) => 'style '+i+' color:Black,stroke:Black,fill:'+colors[q|0]).join('\n')
     + '\n' +  edges.map(([a,b,c]) => a+(c ?' -':' .')+'-> '+b).join('\n')
