@@ -65,7 +65,6 @@ void dot(γ*s) { s->δ(s); }
 //void  S2(γ*s) { s->β(s, dot, SS); }
 //void  Sa(γ*s) { s->τ(s, 'a', dot);}
 //void   S(γ*s) { s->β(s, S2,  Sa); }
-#include "grammar.h"
 
 //D(S, τ, 'b',          A )D(A,
 //     β,  S,  τ, 'a', dot)
