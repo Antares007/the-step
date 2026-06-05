@@ -1,58 +1,54 @@
 const Red = 1, Green = 2, Yellow = 3, Blue = 4
-const toti   = S => S[Τ] ? S[Τ]
-                         :(S[Τ] = Red_descend(S, [S], d => d(Red)))
-const tsvero = S => S[Δ] ? S[Δ]
-                         :(S[Δ] = Yellow_descend(S, [S], d => d(Yellow)))
-export default toti
+const dot   =           (o,p) => p[0](o)
+const block = (...a) => (o,p) => p[1](o, ...a)
+const tword = (...a) => (o,p) => p[2](o, ...a)
+const Red_descend = [
+  (c      ) => dot,
+  (c, x, s) => block(x, s(c, Red_descend), Red),
+  (c, s, t) => (t =  t(c, Red_walk)) === dot
+             ?       s(c, Red_descend)
+             : tword(s(c, Red_descend), t, Red)
+]
+const Red_walk = [
+  (c      ) => dot,
+  (c, x, t) => block(x, t(c, Green_walk), Red),
+  (c, s, t) => { for (let ι = c; ι; ι = ι[1])
+                   if (ι[0] === s) return dot
+                 return (s = s([s, c], Red_descend)) === dot
+                       ? dot
+                       : tword(s, t(c, Green_walk), Red) }
+]
+const Green_walk = [
+  (c      ) => (o,p) => p[2](o, tsvero(c[0]), dot, Green),
+  (c, x, t) => block(x, t(c, Green_walk), Green),
+  (c, s, t) => (t = t(c, Green_walk), (o,p) => p[2](o, toti(s), t, Green))
+]
+const Yellow_descend = [
+  (c      ) => dot,
+  (c, _, s) => s(c, Yellow_descend),
+  (c, s, t) => (t =  t(c, Yellow_walk)) === dot
+             ?       s(c, Yellow_descend)
+             : tword(s(c, Yellow_descend), t, Yellow)
+]
+const Yellow_walk = [
+  (c      ) => dot,
+  (c,     ) => dot,
+  (c, s, t) => { for (let ι = c; ι; ι = ι[1])
+                   if (ι[0] === s)
+                     return ι[1] ? dot : t(c, Blue_walk)
+                 return (s = s([s, c], Yellow_descend)) === dot
+                       ? dot
+                       : tword(s, t(c, Blue_walk), Yellow) }
+]
+const Blue_walk = [
+  (c      ) => c[1] ? dot : (o,p) => p[2](o, tsvero(c[0]), dot, Blue),
+  (c, x, t) => block(x, t(c, Blue_walk), Blue),
+  (c, s, t) => (t = t(c, Blue_walk), (o,p) => p[2](o, toti(s), t, Blue))
+]
 const Τ = Symbol("Τ")
+const toti   = S => S[Τ] ? S[Τ]
+                         :(S[Τ] = S([S], Red_descend))
 const Δ = Symbol("Δ")
-
-const block = (...a) => (_,B) => B(...a)
-const tword = (...a) => (_,__,T) => T(...a)
-const Red_descend = (S, c, d) => S(
-  (    ) => d,
-  (x, s) => tword(Red_descend(s, c, d),
-                  block(x,
-                        (_,__,T) => T(tsvero(c[0]), d, Red),
-                        Red),
-                  Red),
-  (s, t) =>     (t = Red_walk(t, c, d)) === d
-          ?       Red_descend(s, c, d)
-          : tword(Red_descend(s, c, d), t, Red)
-)
-const Red_walk = (S, c, d) => S(
-  (    ) => d,
-  (x, t) => block(x, Green_walk(t, c, d), Red),
-  (s, t) => { for (let C = c; C; C = C[1])
-                if (C[0] === s) return d
-              return (s = Red_descend(s, [s, c], d)) === d
-                    ? d
-                    : tword(s, Green_walk(t, c, d), Red) }
-)
-const Green_walk = (S, c, d) => S(
-  (    ) => (_,__,T) => T(tsvero(c[0]), d, Green),
-  (x, t) => block(x, Green_walk(t, c, d), Green),
-  (s, t) => (t = Green_walk(t, c, d), (_,__,T) => T(toti(s), t, Green))
-)
-const Yellow_descend = (S, c, d) => S(
-  (    ) => d,
-  (_, s) => Yellow_descend(s, c, d),
-  (s, t) =>     (t = Yellow_walk(t, c, d)) === d
-          ?       Yellow_descend(s, c, d)
-          : tword(Yellow_descend(s, c, d), t, Yellow)
-)
-const Yellow_walk = (S, c, d) => S(
-  (    ) => d,
-  (    ) => d,
-  (s, t) => { for (let C = c; C; C = C[1])
-                if (C[0] === s)
-                  return C[1] ? d : Blue_walk(t, c, d)
-              return (s = Yellow_descend(s, [s, c], d)) === d
-                    ? d
-                    : tword(s, Blue_walk(t, c, d), Yellow) }
-)
-const Blue_walk = (S, c, d) => S(
-  (    ) => c[1] ? d : (_,__,T) => T(tsvero(c[0]), d, Blue),
-  (x, t) => block(x, Blue_walk(t, c, d), Blue),
-  (s, t) => (t = Blue_walk(t, c, d), (_,__,T) => T(toti(s), t, Blue))
-)
+const tsvero = S => S[Δ] ? S[Δ]
+                         :(S[Δ] = S([S], Yellow_descend))
+export default toti

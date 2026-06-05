@@ -35,10 +35,10 @@ function mermaid(...symbols) {
   for(let i = 0; i < symbols.length; i++) {
     const s = symbols[i] 
     const n = s.name
-    s((      q) =>  attrs[i] = [0, n, q], 
-      (x, u, q) => (attrs[i] = [1, n, q, x], edges.push([i, iof(u), 0])),
-      (s, t, q) => (attrs[i] = [2, n, q],    edges.push([i, iof(s), 1]),
-                                             edges.push([i, iof(t), 0])))
+    s(0, [(c,       q) =>  attrs[i] = [0, n, q], 
+          (c, x, u, q) => (attrs[i] = [1, n, q, x], edges.push([i, iof(u), 0])),
+          (c, s, t, q) => (attrs[i] = [2, n, q],    edges.push([i, iof(s), 1]),
+                                                    edges.push([i, iof(t), 0]))])
   }
   return (
 `---
