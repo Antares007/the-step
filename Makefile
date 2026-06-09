@@ -16,8 +16,8 @@ ASFLAGS = -f elf32
 
 all: mb
 
-mb.elf: mb.o TSU.o mb.ld
-	ld -m elf_i386 -T mb.ld mb.o TSU.o -o mb.elf -o mb.elf
+mb.elf: mb.o mb.ld
+	ld -m elf_i386 -T mb.ld mb.o -o mb.elf -o mb.elf
 mb.iso: mb.elf
 	mkdir -p iso/boot/grub
 	cp mb.elf iso/boot/mb.elf

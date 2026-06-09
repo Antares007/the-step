@@ -86,9 +86,19 @@ static uint8_t stack[16384] __attribute__((aligned(16)));
 
 static void __attribute__((used)) on_interrupt(unsigned int*ctx) {
   int vector = ctx[0];
-  if(vector == 0) {
-    log("div/0 at:0x%x [%p]eip+=2\n", ctx[9], *((void**)ctx[9]));
-    ctx[9] += 2;
+  if (vector == 0) {
+    uint8_t *eip = (uint8_t *)ctx[9];
+    // eip[0] = 0xF7, eip[1] = ModRM
+    uint8_t modrm = eip[1];
+    uint8_t mod = modrm >> 6;
+    uint8_t rm  = modrm & 7;
+    int len = 2;                          // base: opcode + ModRM
+    if (mod == 1) len += 1;               // disp8
+    else if (mod == 2) len += 4;          // disp32
+    else if (mod == 0 && rm == 5) len += 4; // disp32 no-base
+    if (mod != 3 && rm == 4) len += 1;   // SIB byte
+    log("div/0 at %p skipping %d bytes\n", eip, len);
+    ctx[9] += len;
   } else  if (32 <= vector && vector <= 47) {
     if (vector == 33) {
       unsigned char sc = inb(0x60);
@@ -170,9 +180,8 @@ static void pic_remap(void) {
     outb(0x21, 0x01); outb(0xA1, 0x01);  // ICW4: 8086 mode
     outb(0x21, 0xFC); outb(0xA1, 0xFF);  // mask all except IRQ0+IRQ1
 }
-#include "TSU.h"
 
-static int div0() {
+int div0() {
   volatile int divisor = 0;
   volatile int result = 100 / divisor;
   return result;
@@ -195,9 +204,7 @@ kmain(mbi_t *mbi) {
     div0();
     div0();
     div0();
-    topology_stepping_universe(&(operations){
-        .log = log,
-        });
+    while(1) asm volatile ("hlt");
 }
 void __attribute__((naked, section(".text.start")))
 _start(void) {
