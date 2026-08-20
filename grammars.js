@@ -10,26 +10,23 @@ export function expression(o) {
     o(multiplicative)
     o(additive, "+", multiplicative)
     o(additive, "-", multiplicative)
-  }
-  function multiplicative(o) {
-    o(unary)
-    o(multiplicative, "*", unary)
-    o(multiplicative, "/", unary)
-  }
-
-  function unary(o) {
-    o(primary)
-    o("-", unary)
-    o("!", unary)
-  }
-
-  function primary(o) {
-    o(constant)
-    o("(", expression, ")")
-  }
-
-  function constant(o) {
-    ;(o("1"), o("2"), o("3"))
+    function multiplicative(o) {
+      o(unary)
+      o(multiplicative, "*", unary)
+      o(multiplicative, "/", unary)
+      function unary(o) {
+        o(primary)
+        o("-", unary)
+        o("!", unary)
+        function primary(o) {
+          o(constant)
+          o("(", expression, ")")
+          function constant(o) {
+            ;(o("1"), o("2"), o("3"))
+          }
+        }
+      }
+    }
   }
 }
 export function declarations(o) {

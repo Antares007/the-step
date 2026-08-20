@@ -1,4 +1,4 @@
-![the step](./docs/20260323_1328_Machine's%20Step%20Evolution_simple_compose_01kmd0bkjyfewbkzg0zefatpdw.png)
+![the step](./docs/b0d9b27d-fd4a-4088-b53c-f79ec4107deb.jpeg)
 ```js
 fetch(`
   // revolution now
