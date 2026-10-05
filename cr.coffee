@@ -12,12 +12,12 @@ step = (fn, args...) ->
 text = bond
   name  : 'tab'
   S     : (o) -> @T o
-  T1    : (o) -> step o.tword, @T,  @T3
-  T3    : (o) -> step o.tword, @T,  @T0
-  T0    : (o) -> step o.tword, @T,  @D
-  T     : (o) -> step o.block, "t", @A
-  A     : (o) -> step o.block, "a", @B
-  B     : (o) -> step o.block, "b", @D
+  T1    : (o) -> step o.tword, "T", "T3"
+  T3    : (o) -> step o.tword, "T", "T0"
+  T0    : (o) -> step o.tword, "T", "D"
+  T     : (o) -> step o.block, "t", "A"
+  A     : (o) -> step o.block, "a", "B"
+  B     : (o) -> step o.block, "b", "D"
   D     : (o) -> step o.endot
 # id ???
 
@@ -41,19 +41,19 @@ text = bond
 map_cr =
 bond
   name  : 'map_cr'
-  S     : (S_cr, cb_cr) ->
+  S     : (text_space, sym, cb_cr) ->
     step cb_cr.S, bond
       u     : @
       name  : 'newSymbol_cr'
       S     : (o) ->
-        step S_cr.S, bond
+        step text_space[sym], bond
           u     : @
           name  : 'inner observer'
           endot : (    ) -> step o.endot
-          block : (x, r) -> step @u.u.S, (bond S:r), bond
+          block : (x, r) -> step @u.u.S, text_space, r, bond
             name  : 'inner_cb_cr'
             S     : (n) -> step o.block, x.toUpperCase(), n.S
-step map_cr.S, text, bond
+step map_cr.S, text, "S", bond
   name  : 'acb_cr'
   S: (S) ->
     step S.S, bond
