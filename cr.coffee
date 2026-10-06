@@ -23,11 +23,11 @@ map = space 'mapping space',
   Red   : (si, cb_si) ->
     index = "Red #{si[0].name} #{si[1]}"
     @[index] ?= (os) ->
-      inner_observer_space = space 'inner observer',
+      step si, space 'inner observer',
         endot : (    ) -> step SI(os, 'endot')
         block : (x, r) ->
           s = space 'inner block cb',
-            cb    : (si  ) -> step SI(os, 'block'), x.toUpperCase(), si
+            cb    : (si  ) -> step SI(os, 'block'), x, si
           step SI(map, 'Red'), r, SI(s, 'cb')
         tword : (i, r) ->
           s = space 'inner tword cb imaginary',
@@ -37,7 +37,6 @@ map = space 'mapping space',
                   step SI(os, 'tword'), i_si, r_si
               step SI(map, 'Red'), r, SI(s, 'cb')
           step SI(map, 'Red'), i, SI(s, 'cb')
-      step si, inner_observer_space
     step cb_si, SI(@, index)
 
 s = space 's',
