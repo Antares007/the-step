@@ -18,9 +18,8 @@ text =
 
 map =
   name  : 'mapping space'
-  text  : text
-  Red   : (index, cb_si) ->
-    @[index] = (os) ->
+  Red   : (si, cb_si) ->
+    @[si[1]] = (os) ->
       inner_observer_space =
         name  : 'inner observer'
         endot : (    ) -> step SI(os, 'endot')
@@ -28,9 +27,9 @@ map =
           s =
             name  : 'inner cb'
             cb    : (si  ) -> step SI(os, 'block'), x.toUpperCase(), si
-          step SI(map, 'Red'), r[1], SI(s, 'cb')
-      step SI(@text, index), inner_observer_space
-    step cb_si, SI(@, index)
+          step SI(map, 'Red'), r, SI(s, 'cb')
+      step si, inner_observer_space
+    step cb_si, SI(@, si[1])
 
 s =
   name: 's'
@@ -39,4 +38,4 @@ s =
         name  : 'outer observer'
         endot : (    ) -> console.log 'end'
         block : (x, r) -> step r, @; console.log JSON.stringify(x)
-step SI(map, 'Red'), 'T', SI(s, 'i')
+step SI(map, 'Red'), SI(text, 'T'), SI(s, 'i')
