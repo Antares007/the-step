@@ -5,37 +5,46 @@ SI  = (space, index) ->
 step = ([space, index], args...) ->
   setTimeout (-> space[index] args...), 2000 >> 6
   console.log "'#{space.name}'[#{index}](#{(a.name ? JSON.stringify a for a in args).join ', '})"
+space = ((c) -> (n, s) ->
+  s.name = n + ((c[n] ?= 0) or "")
+  c[n]++
+  s)({})
 
-text =
-  name  : 'text space'
-  T1    : (o) -> step SI(o, 'tword'), 'T', SI(text, 'T3')
-  T3    : (o) -> step SI(o, 'tword'), 'T', SI(text, 'T0')
-  T0    : (o) -> step SI(o, 'tword'), 'T', SI(text, 'D')
-  T     : (o) -> step SI(o, 'block'), 't', SI(text, 'A')
-  A     : (o) -> step SI(o, 'block'), 'a', SI(text, 'B')
-  B     : (o) -> step SI(o, 'block'), 'b', SI(text, 'D')
+text = space 'text space',
+  T1    : (o) -> step SI(o, 'tword'), SI(text, 'T'), SI(text, 'T3')
+  T3    : (o) -> step SI(o, 'tword'), SI(text, 'T'), SI(text, 'T0')
+  T0    : (o) -> step SI(o, 'tword'), SI(text, 'T'), SI(text, 'D')
+  T     : (o) -> step SI(o, 'block'), 't',           SI(text, 'A')
+  A     : (o) -> step SI(o, 'block'), 'a',           SI(text, 'B')
+  B     : (o) -> step SI(o, 'block'), 'b',           SI(text, 'D')
   D     : (o) -> step SI(o, 'endot')
 
-map =
-  name  : 'mapping space'
+map = space 'mapping space',
   Red   : (si, cb_si) ->
-    @[si[1]] = (os) ->
-      inner_observer_space =
-        name  : 'inner observer'
+    index = "Red #{si[0].name} #{si[1]}"
+    @[index] ?= (os) ->
+      inner_observer_space = space 'inner observer',
         endot : (    ) -> step SI(os, 'endot')
         block : (x, r) ->
-          s =
-            name  : 'inner cb'
+          s = space 'inner block cb',
             cb    : (si  ) -> step SI(os, 'block'), x.toUpperCase(), si
           step SI(map, 'Red'), r, SI(s, 'cb')
+        tword : (i, r) ->
+          s = space 'inner tword cb imaginary',
+            cb    : (i_si  ) ->
+              s = space 'inner tword cb real',
+                cb    : (r_si  ) ->
+                  step SI(os, 'tword'), i_si, r_si
+              step SI(map, 'Red'), r, SI(s, 'cb')
+          step SI(map, 'Red'), i, SI(s, 'cb')
       step si, inner_observer_space
-    step cb_si, SI(@, si[1])
+    step cb_si, SI(@, index)
 
-s =
-  name: 's'
+s = space 's',
   i: (si) ->
-    step si,
-        name  : 'outer observer'
-        endot : (    ) -> console.log 'end'
+    step si, space 'outer observer',
+        endot : (    ) -> console.log 'end'; console.log map
         block : (x, r) -> step r, @; console.log JSON.stringify(x)
-step SI(map, 'Red'), SI(text, 'T'), SI(s, 'i')
+        tword : (i, r) -> step i, @
+
+step SI(map, 'Red'), SI(text, 'T0'), SI(s, 'i')
