@@ -8,12 +8,12 @@ step = ([space, index], args...) ->
 
 text =
   name  : 'text space'
-  T1    : (o) -> step SI(o, 'tword'), 'T', 'T3'
-  T3    : (o) -> step SI(o, 'tword'), 'T', 'T0'
-  T0    : (o) -> step SI(o, 'tword'), 'T', 'D'
-  T     : (o) -> step SI(o, 'block'), 't', 'A'
-  A     : (o) -> step SI(o, 'block'), 'a', 'B'
-  B     : (o) -> step SI(o, 'block'), 'b', 'D'
+  T1    : (o) -> step SI(o, 'tword'), 'T', SI(text, 'T3')
+  T3    : (o) -> step SI(o, 'tword'), 'T', SI(text, 'T0')
+  T0    : (o) -> step SI(o, 'tword'), 'T', SI(text, 'D')
+  T     : (o) -> step SI(o, 'block'), 't', SI(text, 'A')
+  A     : (o) -> step SI(o, 'block'), 'a', SI(text, 'B')
+  B     : (o) -> step SI(o, 'block'), 'b', SI(text, 'D')
   D     : (o) -> step SI(o, 'endot')
 
 map =
@@ -27,8 +27,8 @@ map =
         block : (x, r) ->
           s =
             name  : 'inner cb'
-            cb    : (si  ) -> step SI(os, 'block'), x.toUpperCase(), si[1]
-          step SI(map, 'Red'), r, SI(s, 'cb')
+            cb    : (si  ) -> step SI(os, 'block'), x.toUpperCase(), si
+          step SI(map, 'Red'), r[1], SI(s, 'cb')
       step SI(@text, index), inner_observer_space
     step cb_si, SI(@, index)
 
@@ -38,5 +38,5 @@ s =
     step si,
         name  : 'outer observer'
         endot : (    ) -> console.log 'end'
-        block : (x, r) -> step SI(si[0], r), @; console.log JSON.stringify(x)
+        block : (x, r) -> step r, @; console.log JSON.stringify(x)
 step SI(map, 'Red'), 'T', SI(s, 'i')
